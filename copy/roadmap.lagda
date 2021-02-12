@@ -105,7 +105,6 @@ linearization, and are natively handled by a Logical Framework (LF) for
 specifying grammars : Grammatical Framework (GF).
 
 \begin{code}[hide]
-{-# OPTIONS --cubical #-}
 
 module roadmap where
 
@@ -113,53 +112,53 @@ module roadmap where
 
 \begin{code}[hide]
 
+{-# OPTIONS --cubical #-}
+
 module Monoid where
 
-module Namespace1 where
+	open import Cubical.Core.Everything
+	open import Cubical.Foundations.Prelude renaming (_∙_ to _∙''_)
+	open import Cubical.Foundations.Isomorphism
 
-  open import Cubical.Core.Everything
-  open import Cubical.Foundations.Prelude renaming (_∙_ to _∙''_)
-  open import Cubical.Foundations.Isomorphism
+	private
+		variable
+			ℓ : Level
 
-  private
-    variable
-      ℓ : Level
+	is-left-unit-for : {A : Type ℓ} → A → (A → A → A) → Type ℓ
+	is-left-unit-for {A = A} e _⋆_ = (x : A) → e ⋆ x ≡ x
 
-  is-left-unit-for : {A : Type ℓ} → A → (A → A → A) → Type ℓ
-  is-left-unit-for {A = A} e _⋆_ = (x : A) → e ⋆ x ≡ x
+	is-right-unit-for : {A : Type ℓ} → A → (A → A → A) → Type ℓ
+	is-right-unit-for {A = A} e _⋆_ = (x : A) → x ⋆ e ≡ x
 
-  is-right-unit-for : {A : Type ℓ} → A → (A → A → A) → Type ℓ
-  is-right-unit-for {A = A} e _⋆_ = (x : A) → x ⋆ e ≡ x
+	is-assoc : {A : Type ℓ} → (A → A → A) → Type ℓ
+	is-assoc {A = A} _⋆_ = (x y z : A) → (x ⋆ y) ⋆ z ≡ x ⋆ (y ⋆ z)
 
-  is-assoc : {A : Type ℓ} → (A → A → A) → Type ℓ
-  is-assoc {A = A} _⋆_ = (x y z : A) → (x ⋆ y) ⋆ z ≡ x ⋆ (y ⋆ z)
+	record MonoidStrRec (A : Type ℓ) : Type ℓ where
+		constructor
+			monoid
+		field
+			ε   : A
+			_∙_ : A → A → A
 
-  record MonoidStrRec (A : Type ℓ) : Type ℓ where
-    constructor
-      monoid
-    field
-      ε   : A
-      _∙_ : A → A → A
+			left-unit  : is-left-unit-for ε _∙_
+			right-unit : is-right-unit-for ε _∙_
+			assoc      : is-assoc _∙_
 
-      left-unit  : is-left-unit-for ε _∙_
-      right-unit : is-right-unit-for ε _∙_
-      assoc      : is-assoc _∙_
+			carrier-set : isSet A
 
-      carrier-set : isSet A
+	record Monoid' : Type (ℓ-suc ℓ) where
+		constructor
+			monoid'
+		field
+			A : Type ℓ
+			ε   : A
+			_∙_ : A → A → A
 
-  record Monoid' : Type (ℓ-suc ℓ) where
-    constructor
-      monoid'
-    field
-      A : Type ℓ
-      ε   : A
-      _∙_ : A → A → A
+			left-unit  : is-left-unit-for ε _∙_
+			right-unit : is-right-unit-for ε _∙_
+			assoc      : is-assoc _∙_
 
-      left-unit  : is-left-unit-for ε _∙_
-      right-unit : is-right-unit-for ε _∙_
-      assoc      : is-assoc _∙_
-
-      carrier-set : isSet A
+			carrier-set : isSet A
 
 \end{code}
 
@@ -167,14 +166,14 @@ We now show yet another definition of a group homomorphism formalized in the
 Agda programming language:
 
 \begin{code}
-  monoidHom : {ℓ : Level}
-            → ((monoid' a _ _ _ _ _ _) (monoid' a' _ _ _ _ _ _) : Monoid' {ℓ} )
-            → (a → a') → Type ℓ
-  monoidHom
-    (monoid' A ε _∙_ left-unit right-unit assoc carrier-set)
-    (monoid' A₁ ε₁ _∙₁_ left-unit₁ right-unit₁ assoc₁ carrier-set₁)
-    f
-    = (m1 m2 : A) → f (m1 ∙ m2) ≡ (f m1) ∙₁ (f m2)
+	monoidHom : {ℓ : Level} 
+						→ ((monoid' a _ _ _ _ _ _) (monoid' a' _ _ _ _ _ _) : Monoid' {ℓ} ) 
+						→ (a → a') → Type ℓ
+	monoidHom 
+		(monoid' A ε _∙_ left-unit right-unit assoc carrier-set) 
+		(monoid' A₁ ε₁ _∙₁_ left-unit₁ right-unit₁ assoc₁ carrier-set₁)
+		f
+		= (m1 m2 : A) → f (m1 ∙ m2) ≡ (f m1) ∙₁ (f m2)
 \end{code}
 
 While the first three definitions above are should be linguistically
@@ -187,7 +186,7 @@ translation, it's underlying theory is largely based on ideas from the compiler
 communities. A cousin of the BNF Converter (BNFC), GF is fully capable of
 parsing progamming languages like Agda! And while the above definition is just
 another concrete syntactic presentation of a group homomorphism, it is distinct
-from the natural language presentations above in that the colors indicate it
+from the natural language presentations above because the colors indicate it
 has indeed type checked. 
 
 While this example may not exemplify the power of Agda's type checker, it is of
@@ -196,75 +195,40 @@ monoidHom, is a well-formed type.  The type-checker is much more useful than is
 immediately evident: it delegates the work of verifying that a proof is
 correct, that is, the work of judging whether a term has a type, to the
 computer. While it's of practical concern is immediate to any exploited grad
-student grading papers late on a Sunday night, its theoretical concern has led
+student grading papers late on a Sunday night, it's theoretical concern has led
 to many recent developments in modern mathematics. Thomas Hales solution to the
 Kepler Conjecture was seen as unverifiable by those reviewing it. This led to
 Hales outsourcing the verification to Interactive Theorem provers HOL Light and
-Isabelle, during which led to many minor corrections in the original proof
-which were never spotted due to human oversight.
+Isabelle, which led to many minor corrections in the original proof which were
+never spotted.
 
 Fields Medalist Vladimir Voevodsky, had the experience of being told one day
 his proof of the Milnor conjecture was fatally flawed. Although the leak in the
 proof was patched, this experience of temporarily believing much of his life's
 work invalid led him to investigate proof assintants as a tool for future
-thought. Indeed, this proof verification error was a key event that led to the
-Univalent Foundations
-Project~\cite{theunivalentfoundationsprogram-homotopytypetheory-2013}.
-
-While Agda and other programming languages are capable of encoding definitions,
-theorems, and proofs, they have so far seen little adoption, and in some cases
-treated with suspicion and scorn by many mathematicians.  This isn't entirely
-unfounded : it's a lot of work to learn how to use Agda or Coq, software
-updates may cause proofs to break, and the inevitable errors we humans are
-instilled in these Theorem Provers. And that's not to mention that Martin-Löf
-Type Theory, the constructive foundational project which underlies these proof
-assistants, is rejected by those who dogmatically accept the law of the
-excluded middle and ZFC as the word of God.
-
-What these theorem provers give the mathematician is confidence that her work
-is correct, and even more importantly, that the work which she takes for
-granted and references in her work is also correct. The task before us is then
-one of religious conversion. And one doesn't undertake a conversion by simply
-by preaching. Foundational details aside, this thesis is meant to provide a
-blueprint for the syntactic reformation that must take place.  
-
-It doesn't ask the mathematician to relinquish the beautiful language she has
-come to love in expressing her ideas.  Rather, it asks her to make a compromise
-for the time being, and use a Controlled Natural Language (CNL) to develop her
-work. In exchange she'll get the confidence that Agda provides. Not only that,
-she'll be able to search through a library, to see who else has possibly
-already postulated and proved her conjecture. This grandiose vision is not
-original, The Formal Abstracts Project 
-
-This may be a grandiose vision for the future of mathematics, 
-
-the computer scientist
-
-undertake the c
+thought.
 
 
-
-It is therefore natural for this thesis, which seeks
-Here we must 
+Lorem ipsum~\cite{theunivalentfoundationsprogram-homotopytypetheory-2013}.
 
 \begin{code}
 
 module Id where
 
-  data _≡_ {A : Set} (a : A) : A → Set where
-    r : a ≡ a
+	data _≡_ {A : Set} (a : A) : A → Set where
+		r : a ≡ a
 
-  infix 20 _≡_
+	infix 20 _≡_
 
-  J : {A : Set}
-      → (D : (x y : A) → (x ≡ y) →  Set)
-      -- → (d : (a : A) → (D a a r ))
-      → ((a : A) → (D a a r ))
-      → (x y : A)
-      → (p : x ≡ y)
-      ------------------------------------
-      → D x y p
-  J D d x .x r = d x
+	J : {A : Set}
+			→ (D : (x y : A) → (x ≡ y) →  Set)
+			-- → (d : (a : A) → (D a a r ))
+			→ ((a : A) → (D a a r ))
+			→ (x y : A)
+			→ (p : x ≡ y)
+			------------------------------------
+			→ D x y p
+	J D d x .x r = d x
 
 \end{code}
 
