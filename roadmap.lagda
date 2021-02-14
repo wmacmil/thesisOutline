@@ -417,9 +417,20 @@ This tension has now been at least partially resolved, or at the very least
 clarified, by an insight Voevodsky was apparently most proud of : the
 introduction of h-levels. We'll delegate these details for a later section, it
 is mentioned here to indicate that extensional type theory was really ``set
-theory'' in disguise, and the work over the past 10 years has elucidated the
-intensional and extensional positions.
+theory'' in disguise, in that it collapses the higher path structure of
+identity types. The work over the past 10 years has elucidated the intensional
+and extensional positions. HoTT, by allowing higher paths, is unashamedly
+intentional, and admits a collapse into the extensional universe if so desired.
+We now the examine the structure induced by this propositional equality.
 
+\subsection{All about Identity}
+
+We start with a slight reformulation of the identity type, where the element
+determining the equality is treated as a parameter rather than an index. This
+is a matter of convenience more than taste, as it delegates work for Agda's
+typechecker that the programmer may find a distraction. The reflexivity terms
+can generally have their endpoints inferred, and therefore cuts down on the
+beauracry which often obscures code. 
 
 \begin{code}
 
@@ -429,6 +440,35 @@ intensional and extensional positions.
   infix 20 _≡_
 
 \end{code}
+
+It is of particular concern in this thesis, because it hightlights a
+fundamental difference between the lingusitic and the formal approach to proof
+presentation.  While the mathematician can whimsically choose to include the
+reflexivity arguement or ignore it if she believes it can be inferred, the
+programmer can't afford such a laxidasical attitude. Once the type has been
+defined, the arguement strcuture is fixed, all future references to the
+definition carefully adhere to its specification. The advantage that the
+programmer does gain however, that of Agda's powerful inferential abilities,
+allows for the insides to be seen via interaction windown. 
+
+Perhaps not of much interest up front, this is incredibly important detail
+which the mathematician never has to deal with explicity, but can easily make
+type and term translation infeasible due to the fast and loose nature of the
+mathematician's writing. Conversely, it may make Natural Language Generation
+(NLG) incredibly clunky, adhering to strict rules when created sentences out of
+programs. 
+
+[ToDo, give a GF example]
+
+A prime source of beauty in constructive mathematics arises from Gentzen's
+recognition of a natural duality in logical connectives. The mutually coherence
+between introduction and elmination rules form the basis of what has since been
+labeled harmony in a deductive system. 
+
+
+
+One of the primary Now, let's look at our first induction principle in type theory.
+
 
 \begin{code}
 
