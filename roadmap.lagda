@@ -466,7 +466,6 @@ between introduction and elmination rules form the basis of what has since been
 labeled harmony in a deductive system. 
 
 
-
 One of the primary Now, let's look at our first induction principle in type theory.
 
 
