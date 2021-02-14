@@ -674,7 +674,7 @@ and fascinating articulation of power of the machinery we've so far built. The
 fact the path space over a type naturally must satisfies coherence laws in an
 even higher path space gives leads to this notion of types as higher groupoids.  
 
-As regards the natural language--at this point, the bookkeeping starts to get hairy.  Paths between paths, and paths between paths between paths, these ideas start to lose geometric inutiotion. And the mathematician, while they write 
+As regards the natural language--at this point, the bookkeeping starts to get hairy.  Paths between paths, and paths between paths between paths, these ideas start to lose geometric inutiotion. And the mathematician, while they write $\eq$, 
 
 Many of the proofs beyond this point are either routinely made via
 the induction principle, or even more routinely by just pattern matching on
