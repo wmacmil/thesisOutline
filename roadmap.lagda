@@ -461,9 +461,19 @@ programs.
 [ToDo, give a GF example]
 
 A prime source of beauty in constructive mathematics arises from Gentzen's
-recognition of a natural duality in logical connectives. The mutually coherence
-between introduction and elmination rules form the basis of what has since been
-labeled harmony in a deductive system. 
+recognition of a natural duality in the rules for introducing and using logical
+connectives. The mutually coherence between introduction and elmination rules
+form the basis of what has since been labeled harmony in a deductive system.
+This harmony isn't just an artifact of beauty, it forms the basis for cuts in
+proof normalization, and correspondingly, evaluation of terms in a programming
+langauge. 
+
+The idea is simple, each new connective, or type former, needs a means of
+constructing its terms from its constiutuent parts, yielding introduction
+rules. This however, isn't enough - we need a way of dissecting and using the
+terms we construct. This yields an elimantion rule which can be uniquely
+derived from an inductively defined type. These elimination forms yield induction principles, or a general notion of proof by induction, when given an interpration in mathematics. The proof by induction of 
+
 
 
 One of the primary Now, let's look at our first induction principle in type theory.
@@ -483,19 +493,18 @@ One of the primary Now, let's look at our first induction principle in type theo
 
 \end{code}
 
-\begin{code}
-
-  _⁻¹ : {A : Set} {x y : A} → x ≡ y → y ≡ x
-  _⁻¹ {A} {x} {y} p = J D d x y p
-    where
-      D : (x y : A) → x ≡ y → Set
-      D x y p = y ≡ x
-      d : (a : A) → D a a r
-      d a = r
-
-  infixr 50 _⁻¹
-
-\end{code}
+\begin{lem}\label{lem:opp}
+  For every type $A$ and every $x,y:A$ there is a function
+  \begin{equation*}
+    (x= y)\to(y= x)
+  \end{equation*}
+  denoted $p\mapsto \opp{p}$, such that $\opp{\refl{x}}\jdeq\refl{x}$ for each $x:A$.
+  We call $\opp{p}$ the \define{inverse} of $p$.
+  %\indexdef{path!inverse}%
+  %\indexdef{inverse!of path}%
+  %\index{equality!symmetry of}%a
+  %\index{symmetry!of equality}%
+\end{lem}
 
 \begin{proof}[First proof]
   Assume given $A:\UU$, and
@@ -519,10 +528,18 @@ One of the primary Now, let's look at our first induction principle in type theo
 
 \begin{code}
 
-  _⁻¹' : {A : Set} {x y : A} → x ≡ y → y ≡ x
-  _⁻¹' {A} {x} {y} r = r
+  _⁻¹ : {A : Set} {x y : A} → x ≡ y → y ≡ x
+  _⁻¹ {A} {x} {y} p = J D d x y p
+    where
+      D : (x y : A) → x ≡ y → Set
+      D x y p = y ≡ x
+      d : (a : A) → D a a r
+      d a = r
+
+  infixr 50 _⁻¹
 
 \end{code}
+
 
 \begin{proof}[Second proof]
   We want to construct, for each $x,y:A$ and $p:x=y$, an element $\opp{p}:y=x$.
@@ -531,6 +548,14 @@ One of the primary Now, let's look at our first induction principle in type theo
   Thus, in the ``reflexivity case'', we can define $\opp{\refl{x}}$ to be simply $\refl{x}$.
   The general case then follows by the induction principle, and the conversion rule $\opp{\refl{x}}\jdeq\refl{x}$ is precisely the proof in the reflexivity case that we gave.
 \end{proof}
+
+\begin{code}
+
+  _⁻¹' : {A : Set} {x y : A} → x ≡ y → y ≡ x
+  _⁻¹' {A} {x} {y} r = r
+
+\end{code}
+
 
 \begin{code}
   _∙_ : {A : Set} → {x y : A} → (p : x ≡ y) → {z : A} → (q : y ≡ z) → x ≡ z
@@ -563,18 +588,6 @@ One of the primary Now, let's look at our first induction principle in type theo
 
 \end{code}
 
-\begin{lem}\label{lem:opp}
-  For every type $A$ and every $x,y:A$ there is a function
-  \begin{equation*}
-    (x= y)\to(y= x)
-  \end{equation*}
-  denoted $p\mapsto \opp{p}$, such that $\opp{\refl{x}}\jdeq\refl{x}$ for each $x:A$.
-  We call $\opp{p}$ the \define{inverse} of $p$.
-  %\indexdef{path!inverse}%
-  %\indexdef{inverse!of path}%
-  %\index{equality!symmetry of}%a
-  %\index{symmetry!of equality}%
-\end{lem}
 
 
 
