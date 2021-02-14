@@ -309,6 +309,10 @@ modification and distribution
 
 \end{itemize}
 
+The genisis of higher type theory is a somewhat elementary observation : that
+the propositional identity type, parameterized by an arbitrary type $A$ and
+indexed by elements of $A$, can actually be built iteratively from previous
+identities. That is, $A$ may actually already be an identity, $\defeq (x= y)$
 
 Let's start out by examining the inductive definition of the identity type.
 
