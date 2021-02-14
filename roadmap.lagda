@@ -7,6 +7,14 @@
 
 \usepackage{unicode-math}
 
+%\usepackage{amssymb,amsmath,amsthm,stmaryrd,mathrsfs,wasysym}
+%\usepackage{enumitem,mathtools,xspace}
+\usepackage{mathtools}
+\usepackage{xspace}
+
+
+\usepackage{enumitem}
+
 
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
@@ -21,6 +29,33 @@
 \newunicodechar{→}{\ensuremath{\mathnormal\rightarrow}}
 
 \newtheorem{definition}{Definition}
+\newtheorem{lem}{Lemma}
+\newtheorem{proof}{Proof}
+
+\newcommand{\jdeq}{\equiv}      % An equality judgment
+\newcommand{\refl}[1]{\ensuremath{\mathsf{refl}_{#1}}\xspace}
+\newcommand{\define}[1]{\textbf{#1}}
+\newcommand{\defeq}{\vcentcolon\equiv}  % A judgmental equality currently being defined
+
+\newcommand{\ind}[1]{\mathsf{ind}_{#1}}
+\newcommand{\indid}[1]{\ind{=_{#1}}} % (Martin-Lof) path induction principle for identity types
+
+\newcommand{\blank}{\mathord{\hspace{1pt}\text{--}\hspace{1pt}}}
+
+\newcommand{\opp}[1]{\mathord{{#1}^{-1}}}
+\let\rev\opp
+
+\newcommand{\id}[3][]{\ensuremath{#2 =_{#1} #3}\xspace}
+
+
+
+\newcommand{\UU}{\ensuremath{\mathcal{U}}\xspace}
+\let\bbU\UU
+\let\type\UU
+
+
+
+
 
 
 \author{Warrick Macmillan}
@@ -221,6 +256,16 @@ Type Theory, the constructive foundational project which underlies these proof
 assistants, is rejected by those who dogmatically accept the law of the
 excluded middle and ZFC as the word of God.
 
+It should be noted, the constructivist rejects neither the law of the excluded
+middle nor ZFC. She merely observes them, and admits their handiness in certain
+cituations. Excluded middle is indeed a helpful tool, as many mathematicians
+may attest. The contention is that it should be avoided whenever possible -
+proofs which don't rely on it, or it's corallary of proof by contradction, are
+much more ameanable to formalization in systems with decideable type checking.
+And ZFC, while serving the mathematicians of the early 20th century, is 
+lacking when it comes to the higher dimensional structure of n-categories and
+infinity groupoids.
+
 What these theorem provers give the mathematician is confidence that her work
 is correct, and even more importantly, that the work which she takes for
 granted and references in her work is also correct. The task before us is then
@@ -233,28 +278,70 @@ come to love in expressing her ideas.  Rather, it asks her to make a compromise
 for the time being, and use a Controlled Natural Language (CNL) to develop her
 work. In exchange she'll get the confidence that Agda provides. Not only that,
 she'll be able to search through a library, to see who else has possibly
-already postulated and proved her conjecture. This grandiose vision is not
-original, The Formal Abstracts Project 
-
-This may be a grandiose vision for the future of mathematics, 
-
-the computer scientist
-
-undertake the c
-
+already postulated and proved her conjecture. A version of this  grandiose vision is 
+explored in The Formal Abstracts Project.
 
 
 It is therefore natural for this thesis, which seeks
-Here we must 
+
+\section{HoTT Proofs}
+
+We note that all natural language definitions, theorems, and proofs are copied
+here verbatim from the HoTT book.  This decision is admittedly arbitrary, but
+does have some benefits.  We list some here : 
+
+\begin{itemize}[noitemsep]
+
+\item As the HoTT book was a collaborative effort, it mixes the language of
+many individuals and editors, and can be seen as more ``linguistically
+neutral''
+
+\item By its very nature HoTT is interdiscplinary, conceived and constructed by
+mathematicians, logicians, and computer scientists. It therefore is meant to
+interface with all these discplines, and much of the book was indeed formalized
+before it was written
+
+\item It has become canonical reference in the field, and therefore benefits
+from wide familiarity
+
+\item It is open source, with publically available Latex files free for
+modification and distribution
+
+\end{itemize}
+
+
+Let's start out by examining the inductive definition of the identity type.
 
 \begin{code}
 
 module Id where
 
+  data _≡'_ {A : Set} : (a b : A) → Set where
+    r : (a : A) → a ≡' a
+
+\end{code}
+
+We present this statement as it appears in section 1.12 of the HoTT book.
+
+\begin{definition}
+  The formation rule says that given a type $A:\UU$ and two elements $a,b:A$, we can form the type $(\id[A]{a}{b}):\UU$ in the same universe.
+  The basic way to construct an element of $\id{a}{b}$ is to know that $a$ and $b$ are the same.
+  Thus, the introduction rule is a dependent function
+  \[\refl{} : \prod_{a:A} (\id[A]{a}{a}) \]
+  called \define{reflexivity},
+  which says that every element of $A$ is equal to itself (in a specified way).  We regard $\refl{a}$ as being the
+  constant path %path\indexdef{path!constant}\indexsee{loop!constant}{path, constant}
+  at the point $a$.
+\end{definition}
+
+\begin{code}
+
   data _≡_ {A : Set} (a : A) : A → Set where
     r : a ≡ a
 
   infix 20 _≡_
+
+\end{code}
 
   J : {A : Set}
       → (D : (x y : A) → (x ≡ y) →  Set)
@@ -267,6 +354,105 @@ module Id where
   J D d x .x r = d x
 
 \end{code}
+
+\begin{code}
+
+  _⁻¹ : {A : Set} {x y : A} → x ≡ y → y ≡ x
+  _⁻¹ {A} {x} {y} p = J D d x y p
+    where
+      D : (x y : A) → x ≡ y → Set
+      D x y p = y ≡ x
+      d : (a : A) → D a a r
+      d a = r
+
+  infixr 50 _⁻¹
+
+\end{code}
+
+\begin{proof}[First proof]
+  Assume given $A:\UU$, and
+  let $D:{\textstyle\prod_{(x,y:A)}}(x= y) \; \to \; \type$ be the type family defined by $D(x,y,p)\defeq (y= x)$.
+  %$\prod_{(x:A)} \prod_{y:B}$
+  In other words, $D$ is a function assigning to any $x,y:A$ and $p:x=y$ a type, namely the type $y=x$.
+  Then we have an element
+  \begin{equation*}
+    d\defeq \lambda x.\ \refl{x}:\prod_{x:A} D(x,x,\refl{x}).
+  \end{equation*}
+  Thus, the induction principle for identity types gives us an element
+  $\indid{A}(D,d,x,y,p): (y= x)$
+  for each $p:(x= y)$.
+  We can now define the desired function $\opp{(\blank)}$ to be 
+  $\lambda p.\ \indid{A}(D,d,x,y,p)$, 
+  i.e.\ we set 
+  $\opp{p} \defeq \indid{A}(D,d,x,y,p)$.
+  The conversion rule [missing reference] %rule~\eqref{eq:Jconv} 
+  gives $\opp{\refl{x}}\jdeq \refl{x}$, as required.
+\end{proof}
+
+\begin{code}
+
+  _⁻¹' : {A : Set} {x y : A} → x ≡ y → y ≡ x
+  _⁻¹' {A} {x} {y} r = r
+
+\end{code}
+
+\begin{proof}[Second proof]
+  We want to construct, for each $x,y:A$ and $p:x=y$, an element $\opp{p}:y=x$.
+  By induction, it suffices to do this in the case when $y$ is $x$ and $p$ is $\refl{x}$.
+  But in this case, the type $x=y$ of $p$ and the type $y=x$ in which we are trying to construct $\opp{p}$ are both simply $x=x$.
+  Thus, in the ``reflexivity case'', we can define $\opp{\refl{x}}$ to be simply $\refl{x}$.
+  The general case then follows by the induction principle, and the conversion rule $\opp{\refl{x}}\jdeq\refl{x}$ is precisely the proof in the reflexivity case that we gave.
+\end{proof}
+
+\begin{code}
+  _∙_ : {A : Set} → {x y : A} → (p : x ≡ y) → {z : A} → (q : y ≡ z) → x ≡ z
+  _∙_ {A} {x} {y} p {z} q = J D d x y p z q
+      where
+      D : (x₁ y₁ : A) → x₁ ≡ y₁ → Set
+      D x y p = (z : A) → (q : y ≡ z) → x ≡ z
+      d : (z₁ : A) → D z₁ z₁ r
+      d = λ v z q → q
+
+  infixl 40 _∙_
+
+  -- leftId : {A : Set} → (x y : A) → (p : I A x y) → I (I A x y) p (trans x x y r p)
+  iₗ : {A : Set} {x y : A} (p : x ≡ y) → p ≡ r ∙ p
+  iₗ {A} {x} {y} p = J D d x y p 
+    where
+      D : (x y : A) → x ≡ y → Set
+      D x y p = p ≡ r ∙ p
+      d : (a : A) → D a a r
+      d a = r
+
+  -- similairlymeans uniformly substitute the commuted expression throughout the proof.  this applies to all of the proofs
+  iᵣ : {A : Set} {x y : A} (p : x ≡ y) → p ≡ p ∙ r
+  iᵣ {A} {x} {y} p = J D d x y p 
+    where
+      D : (x y : A) → x ≡ y → Set
+      D x y p = p ≡ p ∙ r
+      d : (a : A) → D a a r
+      d a = r
+
+\end{code}
+
+\begin{lem}\label{lem:opp}
+  For every type $A$ and every $x,y:A$ there is a function
+  \begin{equation*}
+    (x= y)\to(y= x)
+  \end{equation*}
+  denoted $p\mapsto \opp{p}$, such that $\opp{\refl{x}}\jdeq\refl{x}$ for each $x:A$.
+  We call $\opp{p}$ the \define{inverse} of $p$.
+  %\indexdef{path!inverse}%
+  %\indexdef{inverse!of path}%
+  %\index{equality!symmetry of}%a
+  %\index{symmetry!of equality}%
+\end{lem}
+
+
+
+
+
+
 
 
 
