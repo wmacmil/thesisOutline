@@ -207,6 +207,8 @@ module Namespace1 where
 We now show yet another definition of a group homomorphism formalized in the
 Agda programming language:
 
+[TODO: replace monoidhom with grouphom]
+
 \begin{code}
   monoidHom : {ℓ : Level}
             → ((monoid' a _ _ _ _ _ _) (monoid' a' _ _ _ _ _ _) : Monoid' {ℓ} )
@@ -284,11 +286,28 @@ come to love in expressing her ideas.  Rather, it asks her to make a compromise
 for the time being, and use a Controlled Natural Language (CNL) to develop her
 work. In exchange she'll get the confidence that Agda provides. Not only that,
 she'll be able to search through a library, to see who else has possibly
-already postulated and proved her conjecture. A version of this  grandiose vision is 
+already postulated and proved her conjecture. A version of this grandiose vision is 
 explored in The Formal Abstracts Project.
 
+\section{Preliminaries}
 
-It is therefore natural for this thesis, which seeks
+[Todo : Give overview of tools and theory in the making of this thesis]
+
+\subsection{Grammatical Framework}
+
+...
+
+\subsection{Martin-Löf Type Theory}
+
+...
+
+\subsection{Agda}
+
+...
+
+\subsection{Natural Language and Mathematics}
+
+...
 
 \section{HoTT Proofs}
 
@@ -472,19 +491,59 @@ The idea is simple, each new connective, or type former, needs a means of
 constructing its terms from its constiutuent parts, yielding introduction
 rules. This however, isn't enough - we need a way of dissecting and using the
 terms we construct. This yields an elimantion rule which can be uniquely
-derived from an inductively defined type. These elimination forms yield induction principles, or a general notion of proof by induction, when given an interpration in mathematics. The proof by induction of 
+derived from an inductively defined type. These elimination forms yield
+induction principles, or a general notion of proof by induction, when given an
+interpration in mathematics. In the non-depedent case, this is known as a
+recursion principle, and corresponds to recursion known by programmers far and
+wide.  The proof by induction over natural numbers familiar to mathematicians
+is just one special case of this induction principle at work--the power of
+induction has been recognized and brought to the fore by computer scientists.
 
+We now elaborate the most important induction principle in HoTT, namely, the
+induction of an identity type.
 
+\begin{definition}[Version 1]
 
-One of the primary Now, let's look at our first induction principle in type theory.
+Moreover, one of the amazing things about homotopy type theory is that all of the basic constructions and axioms---all of the
+higher groupoid structure---arises automatically from the induction
+principle for identity types.
+Recall from [section 1.12]  that this says that if % \cref{sec:identity-types}
+  \begin{itemize}[noitemsep]
+    \item for every $x,y:A$ and every $p:\id[A]xy$ we have a type $D(x,y,p)$, and
+    \item for every $a:A$ we have an element $d(a):D(a,a,\refl a)$,
+  \end{itemize}
+then
+  \begin{itemize}[noitemsep]
+    \item there exists an element $\indid{A}(D,d,x,y,p):D(x,y,p)$ for \emph{every}
+    two elements $x,y:A$ and $p:\id[A]xy$, such that $\indid{A}(D,d,a,a,\refl a)
+    \jdeq d(a)$.
+  \end{itemize}
+\end{definition}
+The book then reiterates this definition, with basically no natural language,
+essentially in the raw logical framework devoid of anything but dependent
+function types.
+\begin{definition}[Version 2]
+In other words, given dependent functions
+\begin{align*}
+  D & :\prod_{(x,y:A)}(x= y) \; \to \; \type\\
+  d & :\prod_{a:A} D(a,a,\refl{a})
+\end{align*}
+there is a dependent function
+\[\indid{A}(D,d):\prod_{(x,y:A)}\prod_{(p:\id{x}{y})} D(x,y,p)\]
+such that
+\begin{equation}\label{eq:Jconv}
+\indid{A}(D,d,a,a,\refl{a})\jdeq d(a)
+\end{equation}
+for every $a:A$.
+Usually, every time we apply this induction rule we will either not care about the specific function being defined, or we will immediately give it a different name.
 
-
+\end{definition}
+Again, we define this, in Agda, staying as true to the syntax as possible.
 \begin{code}
 
   J : {A : Set}
       → (D : (x y : A) → (x ≡ y) →  Set)
-      -- → (d : (a : A) → (D a a r ))
-      → ((a : A) → (D a a r ))
+      → ((a : A) → (D a a r )) -- → (d : (a : A) → (D a a r ))
       → (x y : A)
       → (p : x ≡ y)
       ------------------------------------
@@ -492,6 +551,23 @@ One of the primary Now, let's look at our first induction principle in type theo
   J D d x .x r = d x
 
 \end{code}
+
+It should be noted that, for instance, we can choose to leave out the $d$ label
+on the third line. Indeed minimizing the amount of dependent typing and using
+vanilla function types when dependency is not necessary, is generally
+considered ``best practice'' Agda, because it will get desugared by the time it
+typechecks anyways. For the writer of the text; however, it was convenient to
+define $d$ once, as there are not the same constraints on a mathematician
+writing in latex. It will again, serve as a nontrivial exercise to deal with
+when specifying the grammar, and will be dealt with later [ToDo add section].
+It is also of note that we choose to include Martin-Löf's original name $J$, as
+this is more common in the computer science literature.
+
+Once the identity type has been defined, it is natural to develop an ``equality
+calculus'',  so that we can actually use it in proof's, as well as develop the
+higher groupoid structure of types. The first fact, that propositional equality
+is an equivalence relation, is well motivated by needs of practical theorem
+proving in Agda and the more homotopically minded mathematician. First, we show the symmetry of equality--that paths are reversible.
 
 \begin{lem}\label{lem:opp}
   For every type $A$ and every $x,y:A$ there is a function
@@ -525,7 +601,7 @@ One of the primary Now, let's look at our first induction principle in type theo
   The conversion rule [missing reference] %rule~\eqref{eq:Jconv} 
   gives $\opp{\refl{x}}\jdeq \refl{x}$, as required.
 \end{proof}
-
+The Agda code is certainly more brief: 
 \begin{code}
 
   _⁻¹ : {A : Set} {x y : A} → x ≡ y → y ≡ x
@@ -540,6 +616,20 @@ One of the primary Now, let's look at our first induction principle in type theo
 
 \end{code}
 
+While first encountering induction principles can be scary, they are actually
+more mechanical than one may think. This is due to the the fact that they
+uniquely compliment the introduction rules of an an inductive type, and are
+simply a means of showing one can ``map out'', or derive an arbitrary type
+dependent on the type which has been inductively defined. The mechanical nature
+is what allows for Coq's induction tactic, and perhaps even more elegantly,
+Agda's pattern matching capabilities. It is always easier to use pattern
+matching for the novice Agda programmer, which almost feels like magic.
+Nonetheless, for completeness sake, the book uses the induction principle for
+much of Chapter 2. And pattern matching is unique to programming languages,
+its elegance isn't matched in the mathematicians' lexicon.
+
+Here is the same proof via ``natural language pattern matching'' and Agda
+pattern matching:
 
 \begin{proof}[Second proof]
   We want to construct, for each $x,y:A$ and $p:x=y$, an element $\opp{p}:y=x$.
@@ -556,6 +646,10 @@ One of the primary Now, let's look at our first induction principle in type theo
 
 \end{code}
 
+Next is trasitivity--concatenation of paths--and we omit the natural language
+presentation, which is a slightly more sophisticated arguement than for
+symmetry.  
+
 
 \begin{code}
   _∙_ : {A : Set} → {x y : A} → (p : x ≡ y) → {z : A} → (q : y ≡ z) → x ≡ z
@@ -567,8 +661,27 @@ One of the primary Now, let's look at our first induction principle in type theo
       d = λ v z q → q
 
   infixl 40 _∙_
+\end{code}
 
-  -- leftId : {A : Set} → (x y : A) → (p : I A x y) → I (I A x y) p (trans x x y r p)
+Putting on our spectacles, the reflexivity term serves as evidence of a
+constant path for any given point of any given type. To the category theorist,
+this makes up the data of an identity map. Likewise, conctanation of paths
+starts to look like function composition. This, along with the identity laws
+and associativity as proven below, gives us the data of a category. And we have
+not only have a category, but the symmetry allows us to prove all paths are
+isomorphisms, giving us a groupoid. This isn't a coincedence, it's a very deep
+and fascinating articulation of power of the machinery we've so far built. The
+fact the path space over a type naturally must satisfies coherence laws in an
+even higher path space gives leads to this notion of types as higher groupoids.  
+
+As regards the natural language--at this point, the bookkeeping starts to get hairy.  Paths between paths, and paths between paths between paths, these ideas start to lose geometric inutiotion. And the mathematician, while they write 
+
+Many of the proofs beyond this point are either routinely made via
+the induction principle, or even more routinely by just pattern matching on
+equality paths, we omit the details which can be found in the HoTT book, but it
+is expected that the GF parser will soon cover such examples.
+
+\begin{code}
   iₗ : {A : Set} {x y : A} (p : x ≡ y) → p ≡ r ∙ p
   iₗ {A} {x} {y} p = J D d x y p 
     where
@@ -577,7 +690,6 @@ One of the primary Now, let's look at our first induction principle in type theo
       d : (a : A) → D a a r
       d a = r
 
-  -- similairlymeans uniformly substitute the commuted expression throughout the proof.  this applies to all of the proofs
   iᵣ : {A : Set} {x y : A} (p : x ≡ y) → p ≡ p ∙ r
   iᵣ {A} {x} {y} p = J D d x y p 
     where
@@ -586,21 +698,55 @@ One of the primary Now, let's look at our first induction principle in type theo
       d : (a : A) → D a a r
       d a = r
 
+  leftInverse : {A : Set} {x y : A} (p : x ≡ y) → p ⁻¹ ∙ p ≡ r 
+  leftInverse {A} {x} {y} p = J D d x y p
+    where
+      D : (x y : A) → x ≡ y → Set
+      D x y p = p ⁻¹ ∙ p ≡ r
+      d : (x : A) → D x x r
+      d x = r
+
+  -- lI : {A : Set} {x y : A} (p : x ≡ y) → p ⁻¹ ∙ p ≡ r 
+  -- lI r = r
+
+  rightInverse : {A : Set} {x y : A} (p : x ≡ y) → p ∙ p ⁻¹ ≡ r 
+  rightInverse {A} {x} {y} p = J D d x y p
+    where
+      D : (x y : A) → x ≡ y → Set
+      D x y p = p ∙ p ⁻¹ ≡ r
+      d : (a : A) → D a a r
+      d a = r
+
+  doubleInv : {A : Set} {x y : A} (p : x ≡ y) → p ⁻¹ ⁻¹ ≡ p
+  doubleInv {A} {x} {y} p = J D d x y p
+    where
+      D : (x y : A) → x ≡ y → Set
+      D x y p = p ⁻¹ ⁻¹ ≡ p
+      d : (a : A) → D a a r
+      d a = r
+
+  associativity :{A : Set} {x y z w : A} (p : x ≡ y) (q : y ≡ z) (r' : z ≡ w ) → p ∙ (q ∙ r') ≡ p ∙ q ∙ r'
+  associativity {A} {x} {y} {z} {w} p q r' = J D₁ d₁ x y p z w q r'
+    where
+      D₁ : (x y : A) → x ≡ y → Set
+      D₁ x y p = (z w : A) (q : y ≡ z) (r' : z ≡ w ) → p ∙ (q ∙ r') ≡ p ∙ q ∙ r'
+      -- d₁ : (x : A) → D₁ x x r 
+      -- d₁ x z w q r' = r -- why can it infer this 
+      D₂ : (x z : A) → x ≡ z → Set
+      D₂ x z q = (w : A) (r' : z ≡ w ) → r ∙ (q ∙ r') ≡ r ∙ q ∙ r'
+      D₃ : (x w : A) → x ≡ w → Set
+      D₃ x w r' =  r ∙ (r ∙ r') ≡ r ∙ r ∙ r'
+      d₃ : (x : A) → D₃ x x r
+      d₃ x = r
+      d₂ : (x : A) → D₂ x x r
+      d₂ x w r' = J D₃ d₃ x w r' 
+      d₁ : (x : A) → D₁ x x r
+      d₁ x z w q r' = J D₂ d₂ x z q w r'
+
 \end{code}
 
 
-
-
-
-
-
-
-
-
 \section{Goals and Challenges}
-
-
-\section{Approach}
 
 \bibliographystyle{plain}
 \bibliography{references}
