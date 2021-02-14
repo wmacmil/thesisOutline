@@ -8,7 +8,9 @@
 \usepackage{unicode-math}
 
 %\usepackage{amssymb,amsmath,amsthm,stmaryrd,mathrsfs,wasysym}
+
 %\usepackage{enumitem,mathtools,xspace}
+\usepackage{amsfonts}
 \usepackage{mathtools}
 \usepackage{xspace}
 
@@ -36,6 +38,10 @@
 \newcommand{\refl}[1]{\ensuremath{\mathsf{refl}_{#1}}\xspace}
 \newcommand{\define}[1]{\textbf{#1}}
 \newcommand{\defeq}{\vcentcolon\equiv}  % A judgmental equality currently being defined
+
+%\newcommand{\jdeq}{\equiv}      % An equality judgment
+%\let\judgeq\jdeq
+
 
 \newcommand{\ind}[1]{\mathsf{ind}_{#1}}
 \newcommand{\indid}[1]{\ind{=_{#1}}} % (Martin-Lof) path induction principle for identity types
@@ -286,6 +292,8 @@ It is therefore natural for this thesis, which seeks
 
 \section{HoTT Proofs}
 
+\subsection{Why HoTT for natural language?}
+
 We note that all natural language definitions, theorems, and proofs are copied
 here verbatim from the HoTT book.  This decision is admittedly arbitrary, but
 does have some benefits.  We list some here : 
@@ -310,22 +318,31 @@ modification and distribution
 \end{itemize}
 
 The genisis of higher type theory is a somewhat elementary observation : that
-the propositional identity type, parameterized by an arbitrary type $A$ and
-indexed by elements of $A$, can actually be built iteratively from previous
-identities. That is, $A$ may actually already be an identity, $\defeq (x= y)$
+the identity type, parameterized by an arbitrary type $A$ and indexed by
+elements of $A$, can actually be built iteratively from previous identities.
+That is, $A$ may actually already be an identity defined over another type
+$A'$, namely $A \defeq x=_{A'} y$ where $x,y:A'$. The key idea is that this
+iterating identities admits a homotpical interpretation : 
 
-Let's start out by examining the inductive definition of the identity type.
+\begin{itemize}[noitemsep]
 
-\begin{code}
+\item Types are topological spaces
+\item Terms are points in these space
 
-module Id where
+\item Equality types $x=_{A} y$ are paths in $A$ with endpoints $x$ and $y$ in
+$A$
 
-  data _≡'_ {A : Set} : (a b : A) → Set where
-    r : (a : A) → a ≡' a
+\item Iterated equality types are paths between paths, or continuous path
+deformations in some higher path space. This is, intuitively, what
+mathematicians call a homotopy.
 
-\end{code}
+\end{itemize}
 
-We present this statement as it appears in section 1.12 of the HoTT book.
+To be explicit, given a type $A$, we can form the homotopy $p=_{x=_{A} y}q$
+with endpoints $p$ and $q$ inhabiting the path space $x=_{A} y$.
+
+Let's start out by examining the inductive definition of the identity type.  We
+present this definition as it appears in section 1.12 of the HoTT book.
 
 \begin{definition}
   The formation rule says that given a type $A:\UU$ and two elements $a,b:A$, we can form the type $(\id[A]{a}{b}):\UU$ in the same universe.
@@ -338,6 +355,72 @@ We present this statement as it appears in section 1.12 of the HoTT book.
   at the point $a$.
 \end{definition}
 
+We recapitulate this definition in Agda, and treat : 
+
+\begin{code}[hide]
+
+module Id where
+
+\end{code}
+\begin{code}
+
+  data _≡'_ {A : Set} : (a b : A) → Set where
+    r : (a : A) → a ≡' a
+
+\end{code}
+
+\subsection{An introduction to equality}
+
+There is already some tension brewing : most mathematicains have an intuition
+for equality, that of an identitfication between two pieces of information
+which intuitively must be the same thing, i.e. $2+2=4$. They might ask, what
+does it mean to ``construct an element of $\id{a}{b}$''? For the mathematician
+use to thinking in terms of sets $\{\id{a}{b} \mid a,b \in \mathbb{N} \}$ isn't
+a well-defined notion. Due to its use of the axiom of extensionality, the set
+theoretic notion of equality is, no suprise, extensional.  This means that sets
+are identified when they have the same elements, and equality is therefore
+external to the notion of set. To inhabit a type means to provide evidence for
+that inhabitation. The reflexivity constructor is therefore a means of
+providing evidence of an equality. This evidence approach is disctinctly
+constructive, and a big reason why classical and constructive mathematics,
+especially when treated in an intuitionistic type theory suitable for a
+programming language implementation, are such different beasts.
+
+In Martin-Löf Type Theory, there are two fundamental notions of equality,
+propositional and definitional.  While propositional equality is inductively
+defined (as above) as a type which may have possibly more than one inhabitant,
+definitional equality, denoted $-\equiv -$ and perhaps more aptly named
+computational equality, is familiarly what most people think of as equality.
+Namely, two terms which compute to the same canonical form are computationally
+equal. In intensional type theory, propositional equality is a weaker notion
+than computational equality : all propositionally equal terms are
+computationally equal. However, computational equality does not imply
+propistional equality - if it does, then one enters into the space of
+extensional type theory. 
+
+Prior to the homotopical interpretation of identity types, debates about
+extensional and intensional type theories centred around two features or bugs :
+extensional type theory sacrificed decideable type checking, while intensional
+type theories required extra beauracracy when dealing with equality in proofs.
+One approach in intensional type theories treated types as setoids, therefore
+leading to so-called ``Setoid Hell''. These debates reflected Martin-Löf's
+flip-flopping on the issue. His seminal 1979 Constructive Mathematics and
+Computer Programming, which took an extensional view, was soon betrayed by
+lectures he gave soon thereafter in Padova in 1980.  Martin-Löf was a born
+again intensional type theorist.  These Padova lectures were later published in
+the "Bibliopolis Book", and went on to inspire the European (and Gothenburg in
+particular) approach to implementing proof assitants, whereas the
+extensionalists were primarily eminating from Robert Constable's group at
+Cornell. 
+
+This tension has now been at least partially resolved, or at the very least
+clarified, by an insight Voevodsky was apparently most proud of : the
+introduction of h-levels. We'll delegate these details for a later section, it
+is mentioned here to indicate that extensional type theory was really ``set
+theory'' in disguise, and the work over the past 10 years has elucidated the
+intensional and extensional positions.
+
+
 \begin{code}
 
   data _≡_ {A : Set} (a : A) : A → Set where
@@ -346,6 +429,8 @@ We present this statement as it appears in section 1.12 of the HoTT book.
   infix 20 _≡_
 
 \end{code}
+
+\begin{code}
 
   J : {A : Set}
       → (D : (x y : A) → (x ≡ y) →  Set)
