@@ -1,4 +1,4 @@
-module Id where
+module MyId where
 
 open import Agda.Builtin.Sigma public
 
@@ -209,12 +209,12 @@ lem2' {A} a α β =  apf  (λ - → - ∙ (iᵣ r ⁻¹ ∙ α ∙ iᵣ r)) (lem
 
 
 eckmannHilton : {A : Set} → (a : A) → (α β : Ω² {A} a) → α ∙ β ≡ β ∙ α 
-eckmannHilton a α β = {!!} 
-  where
-    l0 : (α ⋆ β) ≡ α ∙ β
-    l0 = ⋆≡∙ a α β
-    l0' : (α ⋆' β) ≡ β ∙ α
-    l0' = ⋆'≡∙ a α β
+eckmannHilton a r r = r
+  -- where
+  --   l0 : (α ⋆ β) ≡ α ∙ β
+  --   l0 = ⋆≡∙ a α β
+  --   l0' : (α ⋆' β) ≡ β ∙ α
+  --   l0' = ⋆'≡∙ a α β
 
 
 

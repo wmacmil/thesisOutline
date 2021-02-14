@@ -220,14 +220,6 @@ lem2' {A} a α β =  apf  (λ - → - ∙ (iᵣ r ⁻¹ ∙ α ∙ iᵣ r)) (lem
 
 
 
--- variable 
---   A B C : Set
---   x y z w : A
---   f : A → B
---   g : B → C
---   p : x ≡ y
---   q : y ≡ z
-
 apfHom : {A B : Set} {x y z : A} (p : x ≡ y) (f : A → B) (q : y ≡ z) → apf f (p ∙ q) ≡ (apf f p) ∙ (apf f q)
 apfHom {A} {B} {x} {y} {z} p f q = J D d x y p
   where
@@ -260,7 +252,6 @@ apfComp {A} {B} {C} {x} {y} p f g = J D d x y p
 id : {A : Set} → A → A
 id = λ z → z
 
--- apfId : {A B : Set} {x y : A} (p : x ≡ y) (f : _≡_ {A}) → apf f p ≡ p
 
 apfId : {A : Set} {x y : A} (p : x ≡ y) → apf id p ≡ p
 apfId {A} {x} {y} p = J D d x y p
@@ -269,9 +260,6 @@ apfId {A} {x} {y} p = J D d x y p
     D x y p = apf id p ≡ p
     d : (x : A) → D x x r
     d = λ x → r 
---     D x y p = {f : A → B} → apf f (p ⁻¹) ≡ (apf f p) ⁻¹
-
--- apfHom : {A} {x y z} (p q) : apf (p ∙ q) ≡ apf p ∙ apf q
 
 
 transport : ∀ {A : Set} {P : A → Set} {x y : A} (p : x ≡ y)  → P x → P y
@@ -282,44 +270,17 @@ transport {A} {P} {x} {y} = J D d x y
     d : (x : A) → D x x r
     d = λ x → id
 
--- all from escardo
--- trans' : {A : Set} {x y z : A} → x ≡ y → y ≡ z → x ≡ z
--- trans' {x = x} p q = transport {P = λ - → x ≡ - } q p 
-
--- trans' : {A : Set} {x y z : A} → x ≡ y → y ≡ z → x ≡ z
--- trans' {x = x} {y = y} {z = z} p q = transport {P = λ - → - ≡ z } (p ⁻¹) q 
-
--- i think this is the solution escardo's after
--- trans' : {A : Set} {x y z : A} → x ≡ y → y ≡ z → x ≡ z
--- trans' {x = x} {y = y} {z = z} p q = transport {P = λ _ → x ≡ z } p (transport {P = λ - → x ≡ - } q p) 
-
--- inv : {A : Set} {x y  : A} → x ≡ y → y ≡ x 
--- inv {x = x} p = transport {P = λ - → - ≡ x} p r
-
--- ap : {A B : Set} (f : A → B) (x y : A) → x ≡ y → f x ≡ f y
--- ap f x y p = transport {P = λ - → f x ≡ f - } p r
-
-
--- transport : ∀ {A : Set} (P : A → Set) {x y : A} (p : x ≡ y)  → P x → P y
--- transport {A} P {x} {y} = J D d x y
-
--- transport' : ∀ {A : Set} {P : A → Set} {x y : A} (p : x ≡ y)  → P x → P y
--- transport' r u = u
-
 
 p* : {A : Set} {P : A → Set} {x : A} {y : A} {p : x ≡ y} → P x → P y
--- p* {P = P} {p = p} u = transport P p u
 p* {P = P} {p = p} u = transport p u
 
 _* : {A : Set} {P : A → Set} {x : A} {y : A} (p : x ≡ y) → P x → P y
 (p *) u = transport p u
--- p * u = transport p u
 
 _×_ : Set → Set → Set
 A × B = Σ A (λ _ → B)
 
 _->'_ : Set → Set → Set
--- _->'_ : ?
 A ->' B = ((x : A) → B)
 
 arrow : Set₁
@@ -328,14 +289,11 @@ arrow = (A B : Set) {b : B} → ((x : A) → B)
 constDepType : (A B : Set) → (A → Set)
 constDepType A B = λ _ → B
   
--- transportArrow : {A B : Set} → {x y : A} (p : x ≡ y) → B → B
--- transportArrow {A} {B} p = transport (constDepType A B) p
 
 lift : {A : Set} {P : A → Set} {x y : A}  (u : P x) (p : x ≡ y) → (x , u) ≡ (y , p* {P = P} {p = p} u)
 lift {P} u r = r --could use J, but we'll skip the effort for now
 
 
--- the type inference needs p below
 apd : {A : Set} {P : A → Set} (f : (x : A) → P x) {x y : A} {p : x ≡ y}
   → p* {P = P} {p = p} (f x) ≡ f y
 apd {A} {P} f {x} {y} {p} = J D d x y p
@@ -345,11 +303,7 @@ apd {A} {P} f {x} {y} {p} = J D d x y p
     d : (x : A) → D x x r
     d = λ x → r
 
--- the type inference needs p below
 
-
--- transportconst : {A B : Set} {x y : A} {p : x ≡ y} (b : B) → transport (constDepType A B) p b ≡ b
--- where P(x) :≡ B
 transportconst : {A B : Set} {x y : A} {p : x ≡ y} (b : B) → transport {P = λ _ → B} p b ≡ b
 transportconst {A} {B} {x} {y} {p} b = J D d x y p
   where
@@ -359,10 +313,7 @@ transportconst {A} {B} {x} {y} {p} b = J D d x y p
     d = λ x → r
 
 -- 2.3.9
-
--- problem is we can't avoid keeping the P around to keep the type inference happy
 twothreenine : {A : Set} {P : A → Set} {x y z : A}  (p : x ≡ y) (q : y ≡ z ) {u : P x} → ((q *) (_* {P = P} p u)) ≡ (((p ∙ q) *) u)
--- twothreenine : {A : Set} {P : A → Set} {x y z : A}  (p : x ≡ y) (q : y ≡ z ) {u : P x} → ((q *) ((p *) {P = P} u)) ≡ (((p ∙ q) *) u)
 twothreenine r r = r
 
 twothreeten : {A B : Set} {f : A → B} {P : B → Set} {x y : A} (p : x ≡ y) {u : P (f x) }  → transport p u ≡ transport {P = P} (apf f p) u 
@@ -374,9 +325,7 @@ twothreeeleven r = r
 -- 2.4
 
 infixl 20 _~_
--- defn of homotopy
 _~_ : {A : Set} {P : A → Set} (f g : (x : A) → P x) → Set
--- _~_ {A} f g = (x : A) → f x ≡ g x
 f ~ g  = (x : _) → f x ≡ g x
 
 
