@@ -966,13 +966,75 @@ While GF is targeted towards natural language translation, there's nothing
 stopping it from being used as a PL tool as well, like, for instance, the
 front-end of a compiler. The innovation of this thesis is to combine both uses,
 thereby allowing translation between Controlled Natural Languages and
-Programming Languages.
+programming languages.
+
+Example expressions the grammar can parse are seen below, which have been
+verified by hand to be isomorphic to the corresponding cubicaltt BNFC trees:
+
+\begin{verbatim}
+
+data bool : Set where true | false 
+data nat : Set where zero | suc ( n : nat )  
+caseBool ( x : Set ) ( y z : x ) : bool -> Set = split false -> y || true -> z
+indBool ( x : bool -> Set ) ( y : x false ) ( z : x true ) : ( b : bool ) -> x b = split false -> y || true  -> z
+funExt  ( a : Set )   ( b : a -> Set )   ( f g :  ( x : a )  -> b x )   ( p :  ( x : a )  -> ( b x )   ( f x ) == ( g x )  )  : (  ( y : a )  -> b y )  f == g = undefined
+foo ( b : bool ) : bool = b
+
+\end{verbatim}
+
+[Todo] add use cases
+
+\section{Goals and Challenges}
+
+The parser is still quite primitive, and needs to be extended extensively to
+support natural language ambiguity in mathematics as well as other linguistic
+nuance that GF captures well, like tense and aspect. This can follow a method
+expored in Aarne's paper : "Translating between Language and Logic: What Is
+Easy and What Is Difficult" where one develops a denotational semantics for
+translating between natural language expressions with the desired AST. The bulk
+of this work will be writing a Haskell back-end implementing this AST
+transformation. The extended syntax, designed for linguistic nuance, will be
+filtered into the core syntax, which is essentially what I have done.
+
+The Resource Grammar Library (RGL) is designed for out-of-the box grammar
+writing, and therefore much of the linearization nuance can be outsourced to
+this robust and well-studied library. Nonetheless, each application grammar
+brings its own unique challenges, and the RGL will only get one so far. My
+linearization may require extensive tweaking.
+
+Thus far, our parser is only able to parse non-cubical fragments of the
+cubicalTT standard library. Dealing with Agda pattern matching, it was
+realized, is outside the theoretical boundaries of GF (at least, if one were to
+do it in a non ad-hoc way) due to its inability to pass arbitrary strings down
+the syntax tree nodes during linearization. Pattern matching therefore needs to be dealt
+with via pre and post processing.  Additionally, cubicaltt is weaker at
+dealing with telescopes than Agda, and so a full generalization to Agda is not
+yet possible. Universes are another feature future iterations of this Grammar
+would need to deal with, but as they aren't present in most mathematician's
+vernacular, it is not seen as relevant for the state of this project.
+
+Records should also be added, but because this grammar supports sigma types,
+there is no rush. The Identity type is so far deeply embedded in our grammar,
+so the first code fragment may just be for explanatory purposes.  The degree to
+which the library is extended to cover domain specific information is up to
+debate, but for now the grammar is meant to be kept as minimal as possible.
+
+One interesting extension, time dependnet, would be to allow for a bidrectional
+feedback between GF and Agda : thereby allowing ad hoc extensions to GF's ASTs
+to allow for newly defined Agda functions to be treated with more care, i.e.
+have an arguement structure rather than just treating everything as variables.
+This may be too ambitious for the time being.
+
+\section{Code}
+
+\subsection{GF Parser}
+
+Here is the abstract syntax specification.
 
 \begin{verbatim}
 abstract Exp = {
 
 flags startcat = Decl ;
-
 
       -- note, cubical tt doesn't support inductive families, and therefore the datatype (& labels) need to be modified
 
@@ -1094,26 +1156,148 @@ fun
   Unit : AIdent ;
   Top : AIdent ;
 }
+
 \end{verbatim}
 
+And here is the concrete specification.
 
+\begin{verbatim}
 
+concrete ExpCubicalTT of Exp = open Prelude, FormalTwo in {
 
-\section{Goals and Challenges}
+lincat 
+  Comment,
+  Module ,
+  AIdent,
+  Imp,
+  Decl ,
+  ExpWhere,
+  Tele,
+  Branch ,
+  PTele,
+  Label,
+    -- = Str ;
+  [AIdent],
+  [Decl] ,
+  -- [Exp],
+  [Tele],
+  [Branch] ,
+  [PTele],
+  [Label]
+    -- = {hd,tl : Str} ;
+    = Str ;
+  Exp = TermPrec ;
 
-Thus far, our parser is only able to parse non-cubical fragments of the
-cubicalTT standard library. Dealing with Agda pattern matching, it was
-realized, is outside the theoretical boundaries of GF (at least, if one were to
-do it in a non ad-hoc way) due to its inability to pass arbitrary strings down
-the syntax tree nodes during linearization. This therefore needs to be dealt
-with via pre and post processing.  Additionally, cubicaltt is weather at
-dealing with telescopes than Agda, and so a full generalization to Agda is not
-yet possible. Universes are another feature future iterations of this Grammar
-would need to deal with, but as they aren't present in most mathematician's
-vernacular, it is not seen as relevant for the state of this project.
+lin
 
+  DeclDef a lt e ew = a ++ lt ++ ":" ++ usePrec 0 e ++ "=" ++ ew ;
+  DeclData a t d = "data" ++ a ++ t ++ ": Set where" ++ d ;
+  DeclSplit ai lt e lb = ai ++ lt ++ ":" ++ usePrec 0 e ++ "= split" ++ lb ;
+  DeclUndef a lt e = a ++ lt ++ ":" ++ usePrec 0 e ++ "= undefined" ; -- postulate in agda
 
-\section{Additional Agda Hott Code}
+  Where e ld = usePrec 0 e ++ "where" ++ ld ;
+  NoWhere e = usePrec 0 e ;
+
+  Let ld e = mkPrec 0 ("let" ++ ld ++ "in" ++ (usePrec 0 e)) ;
+  Split e lb = mkPrec 0 ("split@" ++ usePrec 0 e ++ "with" ++ lb) ;
+  Lam pt e = mkPrec 0 ("\\" ++ pt ++ "->" ++ usePrec 0 e) ;
+  Fun = infixr 1 "->" ; -- A -> Set
+  Pi pt e = mkPrec 1 (pt ++ "->" ++ usePrec 1 e) ;
+  Sigma pt e = mkPrec 1 (pt ++ "*" ++ usePrec 1 e) ;
+  App = infixl 2 "" ;
+  Id e1 e2 e3 = mkPrec 3 (usePrec 4 e1 ++ usePrec 4 e2 ++ "==" ++ usePrec 3 e3) ;
+-- for an explicit vs implicit use of parameters, may have to use expressions as records, with a parameter is_implicit
+  IdJ e1 e2 e3 e4 e5 = mkPrec 3 ("J" ++ usePrec 4 e1 ++ usePrec 4 e2 ++ usePrec 4 e3 ++ usePrec 4 e4 ++ usePrec 4 e5) ;
+  Fst e = mkPrec 4 ("proj1" ++ usePrec 4 e) ;
+  Snd e = mkPrec 4 ("proj2" ++ usePrec 4 e) ;
+  Pair e1 e2 = mkPrec 5 ("(" ++ usePrec 0 e1 ++ "," ++ usePrec 0 e2 ++ ")") ;
+  Var a = constant a ;
+  Univ = constant "Set" ;
+  Refl = constant "refl" ;
+
+  BaseAIdent = "" ;
+  ConsAIdent x xs = x ++ xs ;
+
+  -- [Decl] only used in ExpWhere
+  BaseDecl x = x ;
+  ConsDecl x xs = x ++ "\n" ++ xs ;
+
+  -- maybe accomodate so split on empty type just gives () 
+  -- BaseBranch = "" ;
+  BaseBranch x = x ;
+  -- ConsBranch x xs = x ++ "\n" ++ xs ;
+  ConsBranch x xs = x ++ "||" ++ xs ;
+
+  -- for data constructors
+  BaseLabel x = x ;
+  ConsLabel x xs = x ++ "|" ++ xs ; 
+
+  BasePTele x = x ;
+  ConsPTele x xs = x ++ xs ;
+
+  BaseTele = "" ;
+  ConsTele x xs = x ++ xs ;
+
+  OBranch a la ew = a ++ la ++ "->" ++ ew ;
+  TeleC a la e = "(" ++ a ++ la ++ ":" ++ usePrec 0 e ++ ")" ;
+  PTeleC e1 e2 = "(" ++ top e1 ++ ":" ++ top e2 ++ ")" ;
+
+  OLabel a lt = a ++ lt ;
+
+  --object language syntax, all variables for now
+
+  Bool = "bool" ;
+  True = "true" ;
+  False = "false" ;
+  CaseBool = "caseBool" ;
+  IndBool = "indBool" ;
+  FunExt = "funExt" ;
+
+  Nat = "nat" ;
+  Zero = "zero" ;
+  Suc = "suc" ;
+  EqualNat = "equalNat" ;
+
+  Unit = "unit" ;
+  Top = "top" ;
+
+  Foo = "foo" ; 
+
+  A = "a" ;
+  B = "b" ;
+  C = "c" ;
+  D = "d" ;
+  E = "e" ;
+  F = "f" ;
+  G = "g" ;
+  H = "h" ;
+  I = "i" ;
+  J = "j" ;
+  K = "k" ;
+  L = "l" ;
+  M = "m" ;
+  N = "n" ;
+  O = "o" ;
+  P = "p" ;
+  Q = "q" ;
+  R = "r" ;
+  S = "s" ;
+  T = "t" ;
+  U = "u" ;
+  V = "v" ;
+  W = "w" ;
+  X = "x" ;
+  Y = "y" ;
+  Z = "z" ;
+
+  NegB = "negb" ;
+
+  -- p "foo ( b : bool ) : bool = f b where f : bool -> bool = negb"
+}
+
+\end{verbatim}
+
+\subsection{Additional Agda Hott Code}
 
 [ToDo, clean this up, a lot!]
 
